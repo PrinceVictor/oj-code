@@ -1,7 +1,6 @@
 #include <iostream>
 #include <vector>
 using namespace std;
-
 void check(uint8_t* pos, uint8_t low, uint8_t high){
     uint8_t jin = (*pos+ low)/10;
     *pos = (*pos+ low)%10;
@@ -9,38 +8,55 @@ void check(uint8_t* pos, uint8_t low, uint8_t high){
     if(high){
         check(pos-1,high,0);
     }
-    else
-        return;
 }
-
 void stringinit(string & value, int8_t flag, vector<uint8_t>& ptr, vector<uint8_t>& temp, uint16_t & pointIndex, uint16_t n){
+    int8_t pointflag = 0,continueflag =0;
     for(int i=0 ; i<=(int)value.length();){
-        if(value.front() == '0')
+        if(!continueflag && value[0] == '0'){
             value.erase(value.begin());
-        else if(value.back() == '0')
-            value.pop_back();
-        else if(value[i] == '.'){
-            if(flag) return;
-            pointIndex =(value.length()-i-1)*n;
-            value.erase(value.begin()+i);
-            for(auto it:value){
-                ptr.push_back(uint8_t(it-48));
-                temp.push_back(uint8_t(it-48));
-            }
+        }
+        else if(flag && value[0] != '0'){
             return;
         }
+        else if(value[i] == '.' ){
+            for(int j=0 ; j<=(int)value.length();){
+                if(value.back() == '0')
+                    value.pop_back();
+                else if(value[j] == '.'){
+                    pointIndex =(value.length()-j-1)*n;
+                    value.erase(value.begin()+j);
+                    pointflag = 1;
+                    continueflag = 1;
+                    break;
+                    }
+                else j++;
+            }
+        }
+        else if(!value.size()) {
+               value.push_back('0');
+               break;
+         }
+        else if(continueflag) break;
         else i++;
     }
+    for(auto it:value){
+        ptr.push_back(uint8_t(it-48));
+        temp.push_back(uint8_t(it-48));
+    }
+    if(!pointflag) pointIndex = 0;
 }
-
 void calculator(vector<uint8_t> & ptr,vector<uint8_t> & temp, string& container, uint16_t pointIndex,uint16_t & n){
-    if(n<2){
+    if(ptr.size()==1 && ptr[0] == 0){
+        container.push_back('0');
+        return;
+    }
+    else if(n<2){
         for(auto it:temp){
             container.push_back((it+48));
         }
         if(pointIndex)
             container.insert(container.end()-pointIndex,'.');
-        stringinit(container,1,ptr,temp,pointIndex, n);
+            stringinit(container,1,ptr,temp,pointIndex, n);
         return ;
     }
     else{
@@ -60,7 +76,6 @@ void calculator(vector<uint8_t> & ptr,vector<uint8_t> & temp, string& container,
         calculator(ptr, temp,container,pointIndex,n);
     }
 }
-
 int main()
 {
     uint16_t pointIndex;
@@ -68,7 +83,6 @@ int main()
     vector<uint8_t> ptr, temp;
     string input="01.100";
     string container;
-
     while (cin>>input>>n) {
         if(n == 0){
             cout<<"1"<<endl;
